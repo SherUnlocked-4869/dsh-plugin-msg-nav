@@ -1,0 +1,7 @@
+# dsh-plugin-msg-nav bundle patch: one additive browser-surface row.
+# The package.json `dsh.client` declaration turns this row into a browser
+# roster entry; `dsh plugin add` reconciles this bundle into the profile's
+# layer stack automatically.
+- insert:
+    - id: ui-msg-nav
+      name: 'dsh-plugin-msg-nav'
