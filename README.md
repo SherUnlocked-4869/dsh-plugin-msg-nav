@@ -1,26 +1,31 @@
 # dsh-plugin-msg-nav
 
-DeepSeek Harness 对话节点导航条插件：在对话区右缘渲染一列短横线节点串（每条真实用户消息一个节点），支持悬停预览、点击平滑跳转 + 高亮线、>11 节点滑动窗口，<2 条用户消息或非对话页自动隐藏。
+DeepSeek Harness 对话节点导航条插件：在对话区右缘渲染一列短横线节点串（每条真实用户消息一个节点），跟随阅读位置、悬停放大 + 消息预览、点击平滑跳转 + 高亮横线，节点过多时可在悬停区域内用滚轮滑动浏览。
 
-纯浏览器端插件（无 host 侧逻辑），以 **bundle** 形式发布：`dsh plugin` 安装后自动接入 profile 层栈，无需手改 `cordis.patch.yml`。
+![效果图](assets/screenshot.png)
+
+纯浏览器端插件（无 host 侧逻辑），以 **bundle** 形式发布：`dsh plugin` 安装后自动接入 profile 层栈，无需手改任何配置文件。
 
 ## 安装（DSH 官方命令）
 
 ```bash
-# 方式一：从 npm 安装（发布到 registry 后）
-dsh plugin --profile web add dsh-plugin-msg-nav
-
-# 方式二：直接从 GitHub 安装（无需发布）
+# 直接从 GitHub 安装
 dsh plugin --profile web add github:SherUnlocked-4869/dsh-plugin-msg-nav
 ```
 
-`dsh plugin` 会转发给 pnpm 安装到 profile 目录，并自动把声明了 `dsh.bundle` 的包加入 `dsh.profile.bundles` 层栈。随后（重新）启动你的部署即可：
+`dsh plugin` 会转发给 pnpm 安装到 profile 目录，并自动把声明了 `dsh.bundle` 的包加入 `dsh.profile.bundles` 层栈。随后启动（已在运行则重启）部署即可：
 
 ```bash
 dsh web          # 或 dsh --profile <你的 profile>
 ```
 
-无需其他配置。移除：
+更新到最新版本：
+
+```bash
+cd ~/.dsh/profiles/web && pnpm update dsh-plugin-msg-nav
+```
+
+卸载：
 
 ```bash
 dsh plugin --profile web remove dsh-plugin-msg-nav
@@ -30,19 +35,43 @@ dsh plugin --profile web remove dsh-plugin-msg-nav
 
 | 功能 | 行为 |
 | --- | --- |
-| 节点导航条 | 对话区右缘纵向短横线串，每条真实用户消息一个节点 |
-| 跟随阅读位置 | 激活节点（品牌蓝 / 深色下白色）随滚动侦测更新 |
-| 悬停预览 | 450ms 出卡：244px 卡片、6 行截断、对齐官方 HoverCard 视觉 |
-| 点击跳转 | 平滑滚动到对应消息 + 全宽品牌蓝高亮横线（1.5s 淡出），流式输出下亦有兜底落位 |
-| 滑动窗口 | >11 节点时只渲染以激活节点为中心的 11 个窗口内节点 |
+| 节点导航条 | 对话区右缘纵向短横线串，每条**真实用户消息**一个节点（系统注入的 goal 自动延续等不计入），恒定 20px 间距 |
+| 悬停区域放大 | 鼠标进入节点串区域时整体放大（容器 34→44.2px、内容 1.3×，方便操作），移出后恢复 |
+| 列表滑动 | 最多显示 10 条；超过时鼠标悬停在节点串区域内**滚轮上下滑动列表**（页面不滚动） |
+| 悬停节点 | 短横线放大高亮 + 450ms 预览卡（244px、6 行截断、对齐官方 HoverCard 视觉，goal 协议前缀已剥除） |
+| 移出回中 | 鼠标移出悬停区域后，列表平滑居中回当前阅读位置，恢复跟随 |
+| 跟随阅读位置 | 激活节点（品牌蓝 / 深色下白色）随滚动侦测实时更新 |
+| 点击跳转 | 平滑滚动到对应消息 + 全宽品牌蓝高亮横线（1.5s 淡出），流式输出干扰下亦有看门狗兜底落位，列表自动居中到目标节点 |
 | 自动隐藏 | <2 条用户消息、空白会话、非对话视图（如轨迹页）时不显示 |
+| 渲染细节 | 节点位置按 devicePixelRatio 对齐设备像素（粗细一致）；窗口调整 rAF 合帧，不拖慢界面 |
 
 ## 包结构
 
 - `lib/client.js` —— 浏览器端 bundle（`window.__ModuleLoader__` 注册格式，随 DSH 模块系统加载/卸载）
 - `lib/index.js` —— host 侧空插件体（行挂载占位）
-- `cordis.patch.yml` —— bundle 补丁层：一行 `ui-msg-nav` 客户端行
+- `lib/types/` —— TypeScript 类型声明
+- `cordis.patch.yml` —— bundle 补丁层：`insert` 一行 `ui-msg-nav` 客户端行
 - `package.json` —— `dsh.client`（浏览器清单）+ `dsh.bundle`（bundle 清单）双声明
+- `assets/screenshot.png` —— 效果图
+
+## 常见问题
+
+**`dsh plugin add` 报 `ERR_PNPM_TARBALL_INTEGRITY`？**
+
+profile 里某个以 `refs/heads/...` 分支地址安装的第三方插件在上游更新后，新 tarball 校验和与锁文件不符，pnpm 的供应链保护会拒绝整个安装。确认上游更新可信后，把该依赖固定到具体 commit 即可一劳永逸（本插件即以此方式接入）：
+
+```json
+"dependencies": {
+  "<pkg>": "https://codeload.github.com/<owner>/<repo>/tar.gz/<commit-sha>"
+}
+```
+
+然后 `pnpm install` 刷新锁文件，再重新执行 `dsh plugin add`。
+
+**节点串没出现？**
+
+- 确认部署已重启、页面已刷新（bundle 变更需重启部署；刷新页面通常即可拿到新 bundle）
+- 当前会话需有 ≥2 条真实用户消息，且处于「对话」视图
 
 ## 开发
 
