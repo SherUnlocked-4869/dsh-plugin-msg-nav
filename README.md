@@ -1,3 +1,5 @@
+**简体中文** | [English](./README.en.md)
+
 [![Awesome DSH Plugin](https://awesome-dsh-plugin.com/badge.svg)](https://awesome-dsh-plugin.com)
 
 # dsh-plugin-msg-nav
