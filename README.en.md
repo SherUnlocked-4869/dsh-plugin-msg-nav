@@ -50,7 +50,7 @@ dsh plugin --profile web remove dsh-plugin-msg-nav
 | Full history instantly in strip | Host-side session projection (`msgNavMessages`) folds the entire log; the full user message list arrives instantly via the history tail page + push frames — zero page-fetch requests on entering a session, the strip immediately covers **all** user messages with no initial lag. Deployments without the projection registry mounted automatically fall back to background page-by-page loading (50 per page, up to 120 pages), with a pulsing dash at the strip's end while loading |
 | Click on-demand loading | When clicking an old message node not yet rendered into the window, older history is fetched page by page until the message enters the window and its row renders, then smooth jump + highlight (precisely associated by message id and window row, independent of node key format) |
 | Auto-hide | Hidden when there are <2 user messages, the session is empty, or the view is not a conversation (e.g. the trace page) |
-| Rendering details | Node positions are aligned to device pixels by devicePixelRatio (consistent thickness); window resizes are rAF-coalesced so the UI never lags |
+| Rendering details | Node positions are aligned to device pixels by devicePixelRatio (consistent thickness); window resizes are rAF-coalesced so the UI never lags; the rail and panel are **window-rendered** (only visible-window elements are created), scroll detection is rAF-throttled with an incrementally-maintained row cache — near-zero plugin overhead on long sessions |
 
 ## How it works
 

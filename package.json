@@ -1,7 +1,7 @@
 {
   "name": "dsh-plugin-msg-nav",
   "description": "DSH conversation node navigation rail: one dash per user message on the right edge, reading-position tracking, hover preview card, click-to-jump with highlight line, sliding window, auto-hide; host session projection delivers the complete message list instantly (no eager page pulls), with an on-demand loadOlder jump path",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "license": "MIT",
   "type": "module",
   "main": "lib/index.js",
